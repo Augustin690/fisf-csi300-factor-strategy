@@ -17,17 +17,26 @@ The project builds a point-in-time panel of ~300 stocks each month (CSI 300 cons
 
 ```
 .
-├── factors_analysis.ipynb   # Main analysis notebook
-├── pyproject.toml           # Project metadata and dependencies
-├── uv.lock                  # Locked dependency versions
-└── data/                    # Input data (not committed)
-    ├── monthly_data.parquet
-    ├── balance.parquet
-    ├── income.parquet
-    ├── capital.parquet
-    └── ref_data/
-        ├── ETF_hold_510300.SH.parquet
-        └── Stock_Industry_Year.parquet
+├── factors_analysis.ipynb        # Main analysis notebook
+├── pyproject.toml                # Project metadata and dependencies
+├── uv.lock                       # Locked dependency versions
+└── data/                         # Input data (not committed) — see data/README_en.md
+    ├── README_en.md              # Full schema reference for all data files
+    ├── EOD_PRICES.parquet        # Daily price/volume data (aggregated to monthly_data.parquet for the notebook)
+    ├── monthly_data.parquet      # Monthly OHLCV used directly by the notebook
+    ├── BALANCE.parquet / balance.parquet
+    ├── INCOME.parquet  / income.parquet
+    ├── CASHFLOW.parquet          # Cash-flow statement (not used by current notebook)
+    ├── CAPITAL.parquet / capital.parquet
+    ├── DIVIDEND.parquet          # Dividend data (not used by current notebook)
+    └── ref_data/                 # Reference / classification data — see subdirectory READMEs
+        ├── README_ETF_en.md      # ETF holdings schema
+        ├── README_Industry_en.md # Industry classification schema
+        ├── ETF_hold_510300.SH.parquet   # CSI 300 constituent holdings (semi-annual)
+        ├── ETF_hold_510500.SH.parquet   # CSI 500 constituent holdings (semi-annual)
+        ├── ETF_hold_512100.SH.parquet   # CSI 1000 constituent holdings (semi-annual)
+        ├── Stock_Industry_Year.parquet        # Annual stock-industry mapping (simplified)
+        └── AShareSWNIndustriesClass.parquet   # Full SWICS industry change history
 ```
 
 Generated figures are saved to `figures/` after running the notebook.
@@ -38,7 +47,7 @@ Generated figures are saved to `figures/` after running the notebook.
 Semi-annual ETF 510300.SH holdings are forward-filled to a monthly frequency. A month is only included if the most recent holding disclosure is within 185 days, giving a clean monthly CSI 300 proxy (~300 stocks/month).
 
 ### Point-in-time merging
-All financial statement data (balance sheet, income statement) are merged using `announce_date` rather than `report_period` to prevent look-ahead bias. For each `(stock, month_end)` the latest announcement on or before `month_end` is used.
+All financial statement data (balance sheet, income statement) are merged using `announce_date` rather than `report_period` to prevent look-ahead bias. For each `(stock, month_end)` the latest announcement on or before `month_end` is used. Only `ORIGINAL` and `RESTATED` statement types are included; `_VOID` variants (pre-correction versions) are excluded. See [`data/README_en.md`](data/README_en.md) for full details on statement types.
 
 ### Factor evaluation
 - **Decile sort** — stocks are ranked into 10 bins cross-sectionally each month.
@@ -67,6 +76,14 @@ pip install -e .
 
 ### Data
 Place the required Parquet files under `data/` as shown in the structure above. The notebook expects that directory relative to its own location.
+
+Full column-level schemas for every data file are documented in the dedicated READMEs committed to `main`:
+
+| File | Description |
+|---|---|
+| [`data/README_en.md`](data/README_en.md) | Schemas for EOD prices, income statement, balance sheet, cash-flow statement, share capital, and dividend data (time range: 2013–2025) |
+| [`data/ref_data/README_ETF_en.md`](data/ref_data/README_ETF_en.md) | ETF holdings schema for CSI 300 / 500 / 1000 constituent files |
+| [`data/ref_data/README_Industry_en.md`](data/ref_data/README_Industry_en.md) | SWICS Level-1 industry classification — full history and annual snapshot |
 
 ## Running the Notebook
 
